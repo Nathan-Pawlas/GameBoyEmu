@@ -10,5 +10,13 @@
       "out\\build\\x86-release",
       "out\\install\\x86-release"
     ]
-  }
+  },
+  "ExpandedNodes": [
+    "",
+    "\\out",
+    "\\src",
+    "\\src\\GameBoy"
+  ],
+  "SelectedNode": "\\src\\main.cpp",
+  "PreviewInSolutionExplorer": false
 }

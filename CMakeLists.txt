@@ -1,11 +1,12 @@
 ﻿cmake_minimum_required(VERSION 3.26) # FetchContent is available in 3.11+
-project(example)
+project(GBEmu)
 
 #Compiler Flags
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
+set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -31,9 +32,11 @@ endif()
 
 # Our Project
 
-add_executable(${PROJECT_NAME} src/core_basic_window.c)
+add_executable(${PROJECT_NAME} src/main.cpp src/GameBoy/cpu.h)
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 # Web Configurations
 if (${PLATFORM} STREQUAL "Web")
