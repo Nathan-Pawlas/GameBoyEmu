@@ -32,7 +32,7 @@ endif()
 
 # Our Project
 
-add_executable(${PROJECT_NAME} src/main.cpp src/GameBoy/cpu.h)
+add_executable(${PROJECT_NAME} src/main.cpp src/GameBoy/cpu.h "src/GameBoy/memory.h")
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} raylib)
 
