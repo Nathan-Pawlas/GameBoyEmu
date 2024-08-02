@@ -26,8 +26,9 @@ if (NOT SDL2_FOUND) # If there's none, fetch and build raylib
     FetchContent_MakeAvailable(SDL2)
 endif()
 
+include_directories("includes/")
 # Project
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp "src/gb.cpp" "includes/gb.h")
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} SDL2::SDL2main SDL2::SDL2-static)
 
