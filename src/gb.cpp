@@ -1,4 +1,5 @@
 #include "gb.h"
+#include "mmu.h"
 
 int gb::emu_run(int argc, char* argv[])
 {
@@ -14,6 +15,13 @@ int gb::emu_run(int argc, char* argv[])
 	//Initialize Componenets (SDL, TTF, CPU)
 	SDL_Init(SDL_INIT_VIDEO);
 	cpu cpu;
+
+	mmu cart;
+	if (!cart.load_rom(argv[1]))
+	{
+		printf("Failed to load ROM: %s\n", argv[1]);
+		return -1;
+	}
 
 	running = true;
 	paused = false;
@@ -31,7 +39,7 @@ int gb::emu_run(int argc, char* argv[])
 		//cpu step
 		if (!cpu.step())
 		{
-			std::cerr << "Halting: CPU error" << std::endl;
+			std::cerr << "Halting: CPU not implemented" << std::endl;
 			return -1;
 		}
 

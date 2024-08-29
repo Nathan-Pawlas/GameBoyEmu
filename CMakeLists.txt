@@ -1,12 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.26) # FetchContent is available in 3.11+
 project(GBEmu)
 
-#Compiler Flags
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_EXE_LINKER_FLAGS "-static")
-set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
-set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 
 # Generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
