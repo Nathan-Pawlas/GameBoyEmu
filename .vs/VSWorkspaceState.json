@@ -13,9 +13,10 @@
   },
   "ExpandedNodes": [
     "",
+    "\\includes",
     "\\out",
     "\\src"
   ],
-  "SelectedNode": "\\src\\main.cpp",
+  "SelectedNode": "\\includes\\gb.h",
   "PreviewInSolutionExplorer": false
 }

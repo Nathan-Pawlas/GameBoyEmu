@@ -1,11 +1,16 @@
 #pragma once
-#include "gb.h"
+#include "utils.h"
+#include "cpu.h"
+#include <SDL.h>
+
 
 class gb
 {
 public:
-	bool emu_run(int argc, char* argv[]);
+	int emu_run(int argc, char* argv[]);
 
 private:
-
+	bool running;
+	bool paused;
+	uint64_t ticks;
 };

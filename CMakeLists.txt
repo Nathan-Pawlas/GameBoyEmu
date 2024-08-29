@@ -13,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Dependencies
 find_package(SDL2 QUIET) # QUIET or REQUIRED
-if (NOT SDL2_FOUND) # If there's none, fetch and build raylib
+if (NOT SDL2_FOUND) # If there's none, fetch and build SDL2
     include(FetchContent)
     Set(FETCHCONTENT_QUIET FALSE)
     FetchContent_Declare(
@@ -26,9 +26,11 @@ if (NOT SDL2_FOUND) # If there's none, fetch and build raylib
     FetchContent_MakeAvailable(SDL2)
 endif()
 
-include_directories("includes/")
 # Project
-add_executable(${PROJECT_NAME} src/main.cpp "src/gb.cpp" "includes/gb.h")
+include_directories("includes/")
+file (GLOB SOURCE_FILES "src/*.cpp")
+file (GLOB INCLUDES_FILES "includes/*.h")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${INCLUDES_FILES})
 #set(raylib_VERBOSE 1)
 target_link_libraries(${PROJECT_NAME} SDL2::SDL2main SDL2::SDL2-static)
 
