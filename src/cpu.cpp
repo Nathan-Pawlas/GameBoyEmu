@@ -1,12 +1,29 @@
 #include "cpu.h"
-#include "mmu.h"
+#include "instructions.h"
 
-void cpu::init()
+void cpu::init(mmu *memory)
+{
+}
+
+void cpu::fetch_instruction()
+{
+}
+
+void cpu::fetch_data()
+{
+}
+
+void cpu::execute()
 {
 }
 
 bool cpu::step()
 {
-	//std::cout << "To Do: Everything!" << std::endl;
+	if (!halted)
+	{
+		fetch_instruction();
+		fetch_data();
+		execute();
+	}
 	return false;
 }

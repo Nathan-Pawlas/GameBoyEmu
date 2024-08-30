@@ -6,7 +6,7 @@ int gb::emu_run(int argc, char* argv[])
 	//Check for ROM File
 	if (argc < 2)
 	{
-		std::cout << "Incorrect Usage: \n" << "   emu <rom_file>\n" << std::endl;
+		std::cout << "Incorrect Usage: \n" << "   ./GBEmu <path_rom_file>\n" << std::endl;
 		return -1;
 	}
 
@@ -15,9 +15,10 @@ int gb::emu_run(int argc, char* argv[])
 	//Initialize Componenets (SDL, TTF, CPU)
 	SDL_Init(SDL_INIT_VIDEO);
 	cpu cpu;
+	mmu mem;
+	cpu.init(&mem);
 
-	mmu cart;
-	if (!cart.load_rom(argv[1]))
+	if (!mem.load_rom(argv[1]))
 	{
 		printf("Failed to load ROM: %s\n", argv[1]);
 		return -1;

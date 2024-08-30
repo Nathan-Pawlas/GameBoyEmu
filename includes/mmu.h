@@ -12,7 +12,7 @@
 	CGB Flag: 143 -> 1 byte
 	License: 144 - 145 -> 2bytes
 	SGB Flag: 146 -> 1 byte
-	Cart Type: 147 -> 1 byte
+	Cart Type: 147 -> 1 byte 
 	ROM Size: 148 -> 1 byte
 	RAM Size: 149 -> 1 byte
 	Dest Code: 14A -> 1 byte
@@ -39,15 +39,29 @@ typedef struct
 	uint16_t	global_checksum;
 } header;
 
+/*
+	Memory Map
+	0x0000 - 0x3FFF ROM0				Cartridge	
+	0x4000 - 0x7FFF ROMX (switchable)	Cartridge
+	0x8000 - 0x9FFF VRAM				
+	0xA000 - 0xBFFF SRAM				Cartridge
+	0xC000 - 0xCFFF WRAM0				
+	0xD000 - 0xDFFF WRAMX				
+	0xE000 - 0xFDFF ECHO				Reserved
+	0xFE00 - 0xFE9F OAM (Object Attribute Memory)
+	0xFEA0 - 0xFEFF UNUSED				Reserved
+	0xFF00 - 0xFF7F I/O
+	0xFF80 - 0xFFFE HRAM (internal cpu RAM)
+	0xFFFF			Interrupt Enable Flags
+*/
 class mmu
 {
 public:
-
-	bool load_rom(const char *path_to_rom);
 	void debug_print_header();
+	bool load_rom(const char *path_to_rom);
 
-	uint8_t read(uint16_t address);
-	void write(uint16_t address, uint8_t value);
+	uint8_t mem_read(uint16_t address);
+	void mem_write(uint16_t address, uint8_t value);
 
 public:
 	char filename[1024];
