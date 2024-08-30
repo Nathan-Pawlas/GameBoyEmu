@@ -100,20 +100,15 @@ enum reg_type
 	RT_PC,
 };
 
-class instruction
+typedef struct
 {
-public:
-	void set_instruction(uint8_t opcode);
-
-public:
 	in_type type;
 	addr_mode mode;
 	reg_type reg_1;
 	reg_type reg_2;
 	cond_type cond;
 	uint8_t param;
-};
-	
+} instruction;
 
-
+instruction* instruction_lookup(uint8_t opcode);
 
