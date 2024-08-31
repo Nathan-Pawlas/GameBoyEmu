@@ -14,6 +14,7 @@ enum in_type //Instruction Set found here: https://izik1.github.io/gbops/index.h
 	IN_DEC,
 	IN_RLCA,
 	IN_ADD,
+	IN_SUB,
 	IN_RRCA,
 	IN_STOP,
 	IN_RLA,
@@ -67,7 +68,9 @@ enum addr_mode //What kind of reg load/write
 	AM_R_D8,
 	AM_R_MR,
 	AM_R_HLI,
+	AM_HLI_R,
 	AM_R_HLD,
+	AM_HLD_R,
 	AM_R_A8, //Reg AF(hi) to Reg
 	AM_A8_R,
 	AM_HL_SPR, //Stack Ptr to Reg HL
