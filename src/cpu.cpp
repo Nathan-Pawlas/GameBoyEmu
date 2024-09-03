@@ -5,13 +5,6 @@
 void cpu::init(mmu *memory)
 {
 	mem = memory;
-	pc = 0x0100;
-	sptr = 0;
-	mem_dest = 0;
-	AF.data = 0;
-	BC.data = 0;
-	DE.data = 0;
-	HL.data = 0;
 }
 
 void cpu::fetch_instruction()
@@ -69,7 +62,8 @@ void cpu::fetch_data()
 void cpu::execute()
 {
 	IN_PROC proc;
-	proc = processors[IN_NOP];
+	proc = process::get_proc(cur_inst->type);
+	proc();
 }
 
 bool cpu::step()

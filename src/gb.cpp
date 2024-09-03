@@ -17,7 +17,6 @@ int gb::emu_run(int argc, char* argv[])
 	mmu mem;
 	cpu.init(&mem);
 
-
 	//Try Loading ROM into memory
 	if (!mem.load_rom(argv[1]))
 	{

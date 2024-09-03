@@ -116,4 +116,11 @@ typedef struct
 instruction* instruction_lookup(uint8_t opcode);
 
 typedef void (*IN_PROC)(void);
-typedef std::unordered_map<in_type, IN_PROC> inst_map;
+
+typedef std::map<in_type, IN_PROC> inst_map;
+
+class process
+{
+public:
+	static IN_PROC get_proc(in_type type);
+};

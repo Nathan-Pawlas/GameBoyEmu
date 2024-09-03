@@ -294,4 +294,25 @@ instruction* instruction_lookup(uint8_t opcode)
 	return &opcode_table[opcode];
 }
 
-static inst_map im;
+void proc_none()
+{
+    printf("\t INSTRUCTION NOT IMPLEMENTED \n");
+}
+
+void proc_nop()
+{
+    puts("NOP");
+}
+
+static inst_map im = {
+    {IN_NOP, &proc_nop},
+
+};
+
+IN_PROC process::get_proc(in_type type)
+{
+    if (im[type] != NULL)
+        return im[type];
+    else
+        return &proc_none;
+}
