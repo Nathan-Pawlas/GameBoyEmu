@@ -284,5 +284,14 @@ instruction opcode_table[0x100] =
 
 instruction* instruction_lookup(uint8_t opcode)
 {
+    //Check the instruction is valid
+    if (opcode_table[opcode].type == IN_NOP && opcode != 0x00)
+    {
+        std::cerr << "UNKNOWN OPCODE: " << opcode << std::endl;
+        exit(-1);
+    }
+    //Return pointer to the instructions definition
 	return &opcode_table[opcode];
 }
+
+static inst_map im;

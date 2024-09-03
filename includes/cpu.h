@@ -2,12 +2,13 @@
 #include "utils.h"
 #include "instructions.h"
 #include "mmu.h"
+#include <unordered_map>
 
 struct reg
 {
-	uint8_t hi;
-	uint8_t lo;
-	uint16_t full = hi | lo;
+	uint16_t data;
+	uint8_t hi = (data >> 8);
+	uint8_t lo = (data & 0xFF);
 };
 
 class cpu
@@ -21,10 +22,11 @@ public:
 
 	bool step();
 
-public:
-	bool halted;
-	bool stepping;
+	uint16_t read_register(reg_type rt);
 
+public:
+	bool halted = false;
+	bool stepping = true;
 
 private:
 	reg AF;
@@ -34,6 +36,8 @@ private:
 	uint16_t pc;
 	uint16_t sptr;
 
+	bool dest_in_mem;
+
 	uint16_t data;
 	uint16_t mem_dest;
 	uint8_t opcode;
@@ -41,3 +45,4 @@ private:
 
 	mmu *mem;
 };
+

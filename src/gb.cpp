@@ -50,3 +50,7 @@ int gb::emu_run(int argc, char* argv[])
 
 	return 0;
 }
+
+void gb::cycle(int num)
+{
+}
