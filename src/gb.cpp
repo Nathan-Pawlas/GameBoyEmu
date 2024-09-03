@@ -11,7 +11,7 @@ int gb::emu_run(int argc, char* argv[])
 	}
 
 
-	//Initialize Componenets (SDL, TTF, CPU)
+	//Initialize Components (SDL, TTF, CPU)
 	SDL_Init(SDL_INIT_VIDEO);
 	cpu cpu;
 	mmu mem;

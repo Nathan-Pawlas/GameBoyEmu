@@ -1,6 +1,8 @@
 #pragma once
 #include "utils.h"
 
+class cpu; //Forward decleration
+
 enum cond_type //Control Flow Conditions
 {
 	CT_NONE, CT_NZ, CT_Z, CT_NC, CT_C
@@ -115,7 +117,7 @@ typedef struct
 
 instruction* instruction_lookup(uint8_t opcode);
 
-typedef void (*IN_PROC)(void);
+typedef void (*IN_PROC)(cpu*);
 
 typedef std::map<in_type, IN_PROC> inst_map;
 

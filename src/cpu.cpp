@@ -1,5 +1,4 @@
 #include "cpu.h"
-#include "instructions.h"
 #include "gb.h"
 
 void cpu::init(mmu *memory)
@@ -63,7 +62,7 @@ void cpu::execute()
 {
 	IN_PROC proc;
 	proc = process::get_proc(cur_inst->type);
-	proc();
+	proc(this);
 }
 
 bool cpu::step()

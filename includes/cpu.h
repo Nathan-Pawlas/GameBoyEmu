@@ -1,8 +1,7 @@
 #pragma once
 #include "utils.h"
-#include "instructions.h"
 #include "mmu.h"
-#include <unordered_map>
+#include "instructions.h"
 
 
 struct reg
@@ -28,7 +27,7 @@ public:
 public:
 	bool halted = false;
 	bool stepping = true;
-
+	int test = 123;
 private:
 	reg AF;
 	reg BC;

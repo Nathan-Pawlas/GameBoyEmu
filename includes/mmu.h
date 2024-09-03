@@ -103,7 +103,7 @@ private:
 			"HuC1+RAM+BATTERY"
 		};
 
-		if (type <= 0x22)
+		if (type <= 28)
 		{
 			return ROM_TYPES[type];
 		}
