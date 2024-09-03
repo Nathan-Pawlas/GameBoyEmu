@@ -1,5 +1,4 @@
 #include <instructions.h>
-#include <cpu.h>
 
 instruction opcode_table[0x100] =
 {
@@ -295,12 +294,12 @@ instruction* instruction_lookup(uint8_t opcode)
 	return &opcode_table[opcode];
 }
 
-void proc_none(void* cur_cpu)
+void proc_none(cpu* comp)
 {
     printf("\t INSTRUCTION NOT IMPLEMENTED \n");
 }
 
-void proc_nop(void* cur_cpu)
+void proc_nop(cpu* comp)
 {
     puts("NOP");
 }
