@@ -1,4 +1,6 @@
-#include <instructions.h>
+#include "instructions.h"
+#include "cpu.h"
+#include "gb.h"
 
 instruction opcode_table[0x100] =
 {
@@ -287,25 +289,56 @@ instruction* instruction_lookup(uint8_t opcode)
     //Check the instruction is valid
     if (opcode_table[opcode].type == IN_NOP && opcode != 0x00)
     {
-        std::cerr << "UNKNOWN OPCODE: " << opcode << std::endl;
+        printf("UNKNOWN INSTRUCTION! %02x", opcode);
         exit(-1);
     }
     //Return pointer to the instructions definition
 	return &opcode_table[opcode];
 }
 
-void proc_none(cpu* comp)
+void proc_none(cpu* cur_cpu)
 {
-    printf("\t INSTRUCTION NOT IMPLEMENTED \n");
+
 }
 
-void proc_nop(cpu* comp)
+void proc_nop(cpu* cur_cpu)
 {
-    puts("NOP");
+
+}
+
+void proc_ld(cpu* cur_cpu)
+{
+
+}
+
+static bool check_cond(cpu* cur_cpu)
+{
+    bool z = (cur_cpu->AF.lo >> 7) & 0x1;
+    bool c = (cur_cpu->AF.lo >> 4) & 0x1;
+    
+    switch (cur_cpu->cur_inst->cond)
+    {
+    case CT_NONE: return true;
+    case CT_C: return c;
+    case CT_NC: return !c;
+    case CT_Z: return z;
+    case CT_NZ: return !z;
+    }
+}
+
+void proc_jp(cpu* cur_cpu)
+{
+    if (check_cond(cur_cpu))
+    {
+        cur_cpu->pc = cur_cpu->data;
+        gb::cycle(1);
+    }
 }
 
 static inst_map im = {
     {IN_NOP, &proc_nop},
+    {IN_LD, &proc_ld},
+    {IN_JP, &proc_jp},
 
 };
 
@@ -313,6 +346,5 @@ IN_PROC process::get_proc(in_type type)
 {
     if (im[type] != NULL)
         return im[type];
-    else
-        return &proc_none;
+    return NULL;
 }

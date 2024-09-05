@@ -4,11 +4,12 @@
 void cpu::init(mmu *memory)
 {
 	mem = memory;
+	pc = 0x100;
 }
 
 void cpu::fetch_instruction()
 {
-	opcode = mem->mem_read(pc + 1);
+	opcode = mem->mem_read(pc);
 	cur_inst = instruction_lookup(opcode);
 }
 
@@ -20,39 +21,29 @@ void cpu::fetch_data()
 	//Handle Data for each Address Mode
 	switch (cur_inst->mode)
 	{
-	default: 
-		std::cerr << "Unknown Address Mode ----------\n ";
-		printf("\tInstruction: %02x  PC: %02x", opcode, pc);
-		exit(-1);
+	default: exit(-1);
+
 	case AM_IMP: pc++; return;
+
 	case AM_R:
 		data = read_register(cur_inst->reg_1);
 		return;
-	case AM_R_D8:
-		data = mem->mem_read(pc);
-		gb::cycle(1);
-		pc++;
-		return;
-	case AM_R_D16:
-	{
-		int16_t lo = mem->mem_read(pc);
-		gb::cycle(1);
-		uint16_t hi = mem->mem_read(pc + 1);
-		gb::cycle(1);
 
-		data = (hi << 8) | lo;
-		pc += 2;
+	case AM_R_D8:
+		data = mem->mem_read(pc + 1);
+		gb::cycle(1);
+		pc+=2;
 		return;
-	}
+
 	case AM_D16:
 	{
-		uint16_t lo = mem->mem_read(pc);
+		uint16_t lo = mem->mem_read(pc +  1);
 		gb::cycle(1);
-		uint16_t hi = mem->mem_read(pc + 1);
+		uint16_t hi = mem->mem_read(pc + 2);
 		gb::cycle(1);
 
-		data = (hi << 8) | lo;
-		pc += 2;
+		data =  lo | (hi << 8);
+		pc += 3;
 		return;
 	}
 	}
@@ -62,6 +53,11 @@ void cpu::execute()
 {
 	IN_PROC proc;
 	proc = process::get_proc(cur_inst->type);
+	if (proc == NULL)
+	{
+		printf("UNKNOWN INSTRUCTION! %02x", opcode);
+		exit(-1);
+	}
 	proc(this);
 }
 
@@ -72,7 +68,7 @@ bool cpu::step()
 		uint16_t temp_pc = pc;
 		fetch_instruction();
 		fetch_data();
-		printf("Executing Opcode: %02x   PC: %02x\n", opcode, temp_pc);
+		printf("Executing Instruction: %02x   PC: %02x\n", opcode, temp_pc);
 		execute();
 		return true;
 	}
@@ -91,12 +87,13 @@ uint16_t cpu::read_register(reg_type rt)
 	case RT_E: return DE.lo;
 	case RT_H: return HL.hi;
 	case RT_L: return HL.lo;
-	case RT_AF: return AF.data;
-	case RT_BC: return BC.data;
-	case RT_DE: return DE.data;
-	case RT_HL: return HL.data;
+	case RT_AF: return AF.full;
+	case RT_BC: return BC.full;
+	case RT_DE: return DE.full;
+	case RT_HL: return HL.full;
 	case RT_PC: return pc;
 	case RT_SP: return sptr;
 	default: return 0;
 	}
 }
+

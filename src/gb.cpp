@@ -4,21 +4,21 @@
 int gb::emu_run(int argc, char* argv[])
 {
 	//Check for arguments
-	if (argc < 2)
+	/*if (argc < 2)
 	{
 		std::cout << "Incorrect Usage: \n" << "   ./GBEmu <path_rom_file>\n" << std::endl;
 		return -1;
-	}
+	}*/
 
 
 	//Initialize Components (SDL, TTF, CPU)
 	SDL_Init(SDL_INIT_VIDEO);
-	cpu cpu;
+	cpu cpu;	
 	mmu mem;
 	cpu.init(&mem);
 
 	//Try Loading ROM into memory
-	if (!mem.load_rom(argv[1]))
+	if (!mem.load_rom("../../../roms/dmg-acid2.gb"))
 	{
 		printf("Failed to load ROM: %s\n", argv[1]);
 		return -1;
