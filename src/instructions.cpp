@@ -2,8 +2,10 @@
 #include "cpu.h"
 #include "gb.h"
 
+//Table of all instructions
+//{type, addr mode, reg 1, reg 2, cond, param}
 instruction opcode_table[0x100] =
-{
+{   
     //0x0X
     /*0x00*/ {IN_NOP, AM_IMP},
     /*0x01*/ {IN_LD, AM_R_D16, RT_BC},
@@ -241,6 +243,7 @@ instruction opcode_table[0x100] =
     //0xDX
     /*0xD0*/ {IN_RET, AM_IMP, RT_NONE, RT_NONE, CT_NC},
     /*0xD1*/ {IN_POP, AM_R, RT_DE},
+    /*0xD3*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xD2*/ {IN_JP, AM_D16, RT_NONE, RT_NONE, CT_NC},
     /*0xD4*/ {IN_CALL, AM_D16, RT_NONE, RT_NONE, CT_NC},
     /*0xD5*/ {IN_PUSH, AM_R, RT_DE},
@@ -249,7 +252,9 @@ instruction opcode_table[0x100] =
     /*0xD8*/ {IN_RET, AM_IMP, RT_NONE, RT_NONE, CT_C},
     /*0xD9*/ {IN_RETI},
     /*0xDA*/ {IN_JP, AM_D16, RT_NONE, RT_NONE, CT_C},
+    /*0xDB*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xDC*/ {IN_CALL, AM_D16, RT_NONE, RT_NONE, CT_C},
+    /*0xDD*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xDE*/ {IN_SBC, AM_R_D8, RT_A},
     /*0xDF*/ {IN_RST, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0x18},
     
@@ -258,12 +263,17 @@ instruction opcode_table[0x100] =
     /*0xE0*/ {IN_LDH, AM_A8_R, RT_NONE, RT_A},
     /*0xE1*/ {IN_POP, AM_R, RT_HL},
     /*0xE2*/ {IN_LD, AM_MR_R, RT_C, RT_A},
+    /*0xE3*/{ IN_NOP }, //Place Holder: Should Never Be Called
+    /*0xE4*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xE5*/ {IN_PUSH, AM_R, RT_HL},
     /*0xE6*/ {IN_AND, AM_R_D8, RT_A},
     /*0xE7*/ {IN_RST, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0x20},
     /*0xE8*/ {IN_ADD, AM_R_D8, RT_SP},
     /*0xE9*/ {IN_JP, AM_R, RT_HL},
     /*0xEA*/ {IN_LD, AM_A16_R, RT_NONE, RT_A},
+    /*0xEB*/{ IN_NOP }, //Place Holder: Should Never Be Called
+    /*0xEC*/{ IN_NOP }, //Place Holder: Should Never Be Called
+    /*0xED*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xEE*/ {IN_XOR, AM_R_D8, RT_A},
     /*0xEF*/ {IN_RST, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0x28},
     
@@ -272,6 +282,7 @@ instruction opcode_table[0x100] =
     /*0xF1*/ {IN_POP, AM_R, RT_AF},
     /*0xF2*/ {IN_LD, AM_R_MR, RT_A, RT_C},
     /*0xF3*/ {IN_DI},
+    /*0xF4*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xF5*/ {IN_PUSH, AM_R, RT_AF},
     /*0xF6*/ {IN_OR, AM_R_D8, RT_A},
     /*0xF7*/ {IN_RST, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0x30},
@@ -279,12 +290,14 @@ instruction opcode_table[0x100] =
     /*0xF9*/ {IN_LD, AM_R_R, RT_SP, RT_HL},
     /*0xFA*/ {IN_LD, AM_R_A16, RT_A},
     /*0xFB*/ {IN_EI},
+    /*0xFC*/{ IN_NOP }, //Place Holder: Should Never Be Called
+    /*0xFD*/{ IN_NOP }, //Place Holder: Should Never Be Called
     /*0xFE*/ {IN_CP, AM_R_D8, RT_A},
     /*0xFF*/ {IN_RST, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0x38},
 
 };
 
-instruction* instruction_lookup(uint8_t opcode)
+instruction* instruction_lookup(uint16_t opcode)
 {
     //Check the instruction is valid
     if (opcode_table[opcode].type == IN_NOP && opcode != 0x00)
@@ -293,9 +306,12 @@ instruction* instruction_lookup(uint8_t opcode)
         exit(-1);
     }
     //Return pointer to the instructions definition
-	return &opcode_table[opcode];
+    return &opcode_table[opcode];
 }
 
+/////////////////////////////////////////////////
+/*----------------PROCESSES--------------------*/
+/////////////////////////////////////////////////
 void proc_none(cpu* cur_cpu)
 {
 
@@ -309,6 +325,11 @@ void proc_nop(cpu* cur_cpu)
 void proc_ld(cpu* cur_cpu)
 {
 
+}
+
+void proc_di(cpu* cur_cpu)
+{
+    cur_cpu->int_master_enabled = false;
 }
 
 static bool check_cond(cpu* cur_cpu)
@@ -335,11 +356,12 @@ void proc_jp(cpu* cur_cpu)
     }
 }
 
+//Table of function ptrs to be returned to cpu
 static inst_map im = {
     {IN_NOP, &proc_nop},
     {IN_LD, &proc_ld},
     {IN_JP, &proc_jp},
-
+    {IN_DI, &proc_di},
 };
 
 IN_PROC process::get_proc(in_type type)

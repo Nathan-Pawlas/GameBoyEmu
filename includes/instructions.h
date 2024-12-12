@@ -62,11 +62,12 @@ enum in_type //Instruction Set found here: https://izik1.github.io/gbops/index.h
 enum addr_mode //What kind of reg load/write
 {
 	//Note Load syntax: LD Dest, Value
+	AM_IMP, //Imperative (i.e. nothing)
 	AM_R_D16, //16 bits to Reg
 	AM_R_R,	//Reg to Reg
-	AM_MR_R, //Reg to Mem
+	AM_MR_R, //Reg to Mem (addr in reg)
 	AM_R,
-	AM_R_D8,
+	AM_R_D8, //8bits to Reg
 	AM_R_MR,
 	AM_R_HLI,
 	AM_HLI_R,
@@ -77,7 +78,6 @@ enum addr_mode //What kind of reg load/write
 	AM_HL_SPR, //Stack Ptr to Reg HL
 	AM_D16,
 	AM_D8,
-	AM_IMP,
 	AM_D16_R,
 	AM_MR_D8,
 	AM_MR,
@@ -85,10 +85,10 @@ enum addr_mode //What kind of reg load/write
 	AM_R_A16,
 };
 
-enum reg_type
+enum reg_type //See cpu.h for layout of registers
 {
 	RT_NONE,
-	RT_A,
+	RT_A, //8 bit Registers
 	RT_F,
 	RT_B,
 	RT_C,
@@ -96,7 +96,7 @@ enum reg_type
 	RT_E,
 	RT_H,
 	RT_L,
-	RT_AF,
+	RT_AF, //16 bit Unioned Registers
 	RT_BC,
 	RT_DE,
 	RT_HL,
@@ -114,13 +114,13 @@ typedef struct
 	uint8_t param;
 } instruction;
 
-instruction* instruction_lookup(uint8_t opcode);
+instruction* instruction_lookup(uint16_t opcode);
 
 typedef void (*IN_PROC)(cpu*);
 
 typedef std::map<in_type, IN_PROC> inst_map;
 
-class process
+class process //Effictively a "function pointer" class for the cpu
 {
 public:
 	static IN_PROC get_proc(in_type type);

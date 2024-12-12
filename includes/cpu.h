@@ -3,7 +3,10 @@
 #include "mmu.h"
 #include "instructions.h"
 
-
+//Registers are unioned struct of Hi and Lo bits
+// 0x00 + 0x00
+// |hi|   |lo|
+// ---full----
 union reg
 {
 	uint16_t full;
@@ -40,6 +43,7 @@ public:
 	uint16_t sptr = 0x0;
 
 	bool dest_in_mem;
+    bool int_master_enabled;
 
 	uint16_t data = 0;
 	uint16_t mem_dest = 0;

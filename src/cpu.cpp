@@ -19,6 +19,9 @@ void cpu::fetch_data()
 	dest_in_mem = false;
 
 	//Handle Data for each Address Mode
+	if (cur_inst == NULL) {
+		return;
+	}
 	switch (cur_inst->mode)
 	{
 	default: exit(-1);
@@ -27,6 +30,7 @@ void cpu::fetch_data()
 
 	case AM_R:
 		data = read_register(cur_inst->reg_1);
+		pc++;
 		return;
 
 	case AM_R_D8:
@@ -43,7 +47,7 @@ void cpu::fetch_data()
 		gb::cycle(1);
 
 		data =  lo | (hi << 8);
-		pc += 3;
+		pc += 3; //curr_inst | lo_8bits | hi_8bits | next_inst
 		return;
 	}
 	}
