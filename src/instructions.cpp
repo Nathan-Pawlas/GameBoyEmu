@@ -312,14 +312,29 @@ instruction* instruction_lookup(uint16_t opcode)
 /////////////////////////////////////////////////
 /*----------------PROCESSES--------------------*/
 /////////////////////////////////////////////////
+//Reference: https://rgbds.gbdev.io/docs/v0.8.0/gbz80.7
+void set_flags(cpu* cur_cpu, uint8_t z, uint8_t n, uint8_t h, uint8_t c)
+{
+    if (z != -1)
+        BIT_SET(cur_cpu->AF.lo, 7, z); //Set specified bit (7) to flag value (z)
+    if (n != -1)
+        BIT_SET(cur_cpu->AF.lo, 6, n);
+    if (h != -1)
+        BIT_SET(cur_cpu->AF.lo, 5, h);
+    if (c != -1)
+        BIT_SET(cur_cpu->AF.lo, 4, c);
+}
+
 void proc_none(cpu* cur_cpu)
 {
-
+    printf("%02x: \n", cur_cpu->cur_inst->type);
+    std::cout << "\t INVALID INSTRUCTION!\n";
+    exit(-1);
 }
 
 void proc_nop(cpu* cur_cpu)
 {
-
+    //No Operation
 }
 
 void proc_ld(cpu* cur_cpu)
@@ -334,6 +349,7 @@ void proc_di(cpu* cur_cpu)
 
 static bool check_cond(cpu* cur_cpu)
 {
+    //https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
     bool z = (cur_cpu->AF.lo >> 7) & 0x1;
     bool c = (cur_cpu->AF.lo >> 4) & 0x1;
     
@@ -345,6 +361,8 @@ static bool check_cond(cpu* cur_cpu)
     case CT_Z: return z;
     case CT_NZ: return !z;
     }
+
+    return false; //Should never reach
 }
 
 void proc_jp(cpu* cur_cpu)
@@ -356,17 +374,26 @@ void proc_jp(cpu* cur_cpu)
     }
 }
 
+void proc_xor(cpu* cur_cpu)
+{
+    cur_cpu->AF.hi ^= (cur_cpu->data & 0xFF);
+    set_flags(cur_cpu, cur_cpu->AF.hi == 0, 0, 0, 0);
+}
+
 //Table of function ptrs to be returned to cpu
 static inst_map im = {
     {IN_NOP, &proc_nop},
     {IN_LD, &proc_ld},
     {IN_JP, &proc_jp},
     {IN_DI, &proc_di},
+    {IN_XOR, &proc_xor},
 };
 
 IN_PROC process::get_proc(in_type type)
 {
     if (im[type] != NULL)
         return im[type];
-    return NULL;
+    return &proc_none;
 }
+
+

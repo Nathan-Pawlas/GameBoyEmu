@@ -62,7 +62,7 @@ enum in_type //Instruction Set found here: https://izik1.github.io/gbops/index.h
 enum addr_mode //What kind of reg load/write
 {
 	//Note Load syntax: LD Dest, Value
-	AM_IMP, //Imperative (i.e. nothing)
+	AM_IMP, //Implied (i.e. nothing)
 	AM_R_D16, //16 bits to Reg
 	AM_R_R,	//Reg to Reg
 	AM_MR_R, //Reg to Mem (addr in reg)
@@ -73,8 +73,8 @@ enum addr_mode //What kind of reg load/write
 	AM_HLI_R,
 	AM_R_HLD,
 	AM_HLD_R,
-	AM_R_A8, //Reg AF(hi) to Reg
-	AM_A8_R,
+	AM_R_A8, //Read immediate 8bits into Reg A
+	AM_A8_R, //Write Reg A to addr pointed to by immediate 8 bits
 	AM_HL_SPR, //Stack Ptr to Reg HL
 	AM_D16,
 	AM_D8,
