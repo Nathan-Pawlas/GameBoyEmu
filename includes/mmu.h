@@ -62,6 +62,8 @@ public:
 
 	uint8_t mem_read(uint16_t address);
 	void mem_write(uint16_t address, uint8_t value);
+	uint8_t mem_read16(uint16_t address);
+	void mem_write16(uint16_t address, uint16_t value);
 
 public:
 	char filename[1024];

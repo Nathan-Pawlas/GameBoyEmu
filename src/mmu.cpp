@@ -53,8 +53,10 @@ bool mmu::load_rom(const char* path_to_rom)
 //MMU
 uint8_t mmu::mem_read(uint16_t address)
 {
-	if (address < 0x8000) //Reading from ROM
+	if (address < 0x8000)
+	{
 		return rom_data[address];
+	}
 
 	NO_IMPL
 }
@@ -63,10 +65,29 @@ void mmu::mem_write(uint16_t address, uint8_t value)
 {
 	if (address < 0x8000) //Write to Cart ROM
 	{
-		NO_IMPL
+		rom_data[address] = value;
 	}
 
 	NO_IMPL
 }
 
+uint8_t mmu::mem_read16(uint16_t address)
+{
+	if (address < 0x8000)
+	{
+		return rom_data[address] | (rom_data[address + 1] << 8);
+	}
 
+	NO_IMPL
+}
+
+void mmu::mem_write16(uint16_t address, uint16_t value)
+{
+	if (address < 0x8000) //Write to Cart ROM
+	{
+		rom_data[address + 1] = (value >> 8) & 0xFF;
+		rom_data[address] = value & 0xFF;
+	}
+
+	NO_IMPL
+}

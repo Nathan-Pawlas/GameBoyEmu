@@ -255,3 +255,25 @@ uint16_t cpu::read_register(reg_type rt)
 	}
 }
 
+void cpu::set_register(reg_type rt, uint16_t data)
+{
+	switch (rt)
+	{
+	case RT_A: AF.hi = data; return;
+	case RT_F: AF.lo = data; return;
+	case RT_B: BC.hi = data; return;
+	case RT_C: BC.lo = data; return;
+	case RT_D: DE.hi = data; return;
+	case RT_E: DE.lo = data; return;
+	case RT_H: HL.hi = data; return;
+	case RT_L: HL.lo = data; return;
+	case RT_AF: AF.full = data; return;
+	case RT_BC: BC.full = data; return;
+	case RT_DE: DE.full = data; return;
+	case RT_HL: HL.full = data; return;
+	case RT_PC: pc = data; return;
+	case RT_SP: sptr = data; return;
+	default: return;
+	}
+}
+

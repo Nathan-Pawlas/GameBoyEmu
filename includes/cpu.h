@@ -29,6 +29,7 @@ public:
 	bool step();
 
 	uint16_t read_register(reg_type rt);
+    void set_register(reg_type rt, uint16_t data);
 
 public:
 	bool halted = false;

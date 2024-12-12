@@ -339,7 +339,31 @@ void proc_nop(cpu* cur_cpu)
 
 void proc_ld(cpu* cur_cpu)
 {
+    if (cur_cpu->dest_in_mem) //Load into Memory
+    {
+        if (cur_cpu->cur_inst->reg_2 >= RT_AF) //i.e. if it is a 16 bit reg
+        {
+            gb::cycle(1);
+            cur_cpu->mem->mem_write16(cur_cpu->mem_dest, cur_cpu->data);
+        }
+        else
+        {
+            cur_cpu->mem->mem_write(cur_cpu->mem_dest, cur_cpu->data);
+        }
+        return;
+    }
 
+    if (cur_cpu->cur_inst->mode == AM_HL_SPR) //Special case
+    {
+        bool h = (cur_cpu->read_register(cur_cpu->cur_inst->reg_2) & 0xF) + (cur_cpu->data & 0xF) >= 0x10;
+        bool c = (cur_cpu->read_register(cur_cpu->cur_inst->reg_2) & 0xFF) + (cur_cpu->data & 0xFF) >= 0x100;
+        set_flags(cur_cpu, 0, 0, h, c);
+
+        cur_cpu->set_register(cur_cpu->cur_inst->reg_1, (cur_cpu->read_register(cur_cpu->cur_inst->reg_2) + (uint8_t)cur_cpu->data));
+        return;
+    }
+
+    cur_cpu->set_register(cur_cpu->cur_inst->reg_1, cur_cpu->data);
 }
 
 void proc_di(cpu* cur_cpu)
