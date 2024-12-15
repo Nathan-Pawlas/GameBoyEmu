@@ -325,9 +325,63 @@ void set_flags(cpu* cur_cpu, uint8_t z, uint8_t n, uint8_t h, uint8_t c)
         BIT_SET(cur_cpu->AF.lo, 4, c);
 }
 
+static bool check_cond(cpu* cur_cpu)
+{
+    //https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
+    bool z = (cur_cpu->AF.lo >> 7) & 0x1;
+    bool c = (cur_cpu->AF.lo >> 4) & 0x1;
+
+    switch (cur_cpu->cur_inst->cond)
+    {
+    case CT_NONE: return true;
+    case CT_C: return c;
+    case CT_NC: return !c;
+    case CT_Z: return z;
+    case CT_NZ: return !z;
+    }
+
+    return false; //Should never reach
+}
+
+void stack_push(uint8_t data, cpu* cpu) {
+    cpu->sptr--;
+    cpu->mem->mem_write(cpu->sptr, data);
+}
+
+void stack_push16(uint16_t data, cpu* cpu) {
+    stack_push((data >> 8) & 0xFF, cpu);
+    stack_push(data & 0xFF, cpu);
+}
+
+uint8_t stack_pop(cpu* cpu) {
+    return cpu->mem->mem_read(cpu->sptr++);
+}
+
+uint16_t stack_pop16(cpu* cpu) {
+    uint16_t lo = stack_pop(cpu);
+    uint16_t hi = stack_pop(cpu);
+
+    return (hi << 8) | lo;
+}
+
+static void goto_addr(cpu* cpu, uint16_t addr, bool pushpc)
+{
+    if (check_cond(cpu))
+    {
+        if (pushpc)
+        {
+            gb::cycle(2);
+            stack_push16(cpu->pc, cpu);
+        }
+
+        cpu->pc = addr;
+        gb::cycle(1);
+    }
+}
+
 void proc_none(cpu* cur_cpu)
 {
-    printf("%02x: \n", cur_cpu->cur_inst->type);
+    printf("%02x: \n", cur_cpu->opcode);
     std::cout << "\t INVALID INSTRUCTION!\n";
     exit(-1);
 }
@@ -335,6 +389,11 @@ void proc_none(cpu* cur_cpu)
 void proc_nop(cpu* cur_cpu)
 {
     //No Operation
+}
+
+void proc_cb(cpu* cpu)
+{
+    //TODO!!!!
 }
 
 void proc_ld(cpu* cur_cpu)
@@ -366,42 +425,174 @@ void proc_ld(cpu* cur_cpu)
     cur_cpu->set_register(cur_cpu->cur_inst->reg_1, cur_cpu->data);
 }
 
+void proc_ldh(cpu* cpu)
+{
+    if (cpu->cur_inst->reg_1 == RT_A)
+    {
+        cpu->set_register(cpu->cur_inst->reg_1, cpu->mem->mem_read(0xFF00 | cpu->read_register(cpu->cur_inst->reg_2)));
+    }
+    else
+    {
+        cpu->mem->mem_write(0xFF00 | cpu->data, cpu->read_register(cpu->cur_inst->reg_1));
+    }
+    gb::cycle(1);
+}
+
 void proc_di(cpu* cur_cpu)
 {
     cur_cpu->int_master_enabled = false;
-}
-
-static bool check_cond(cpu* cur_cpu)
-{
-    //https://gbdev.io/pandocs/CPU_Registers_and_Flags.html
-    bool z = (cur_cpu->AF.lo >> 7) & 0x1;
-    bool c = (cur_cpu->AF.lo >> 4) & 0x1;
-    
-    switch (cur_cpu->cur_inst->cond)
-    {
-    case CT_NONE: return true;
-    case CT_C: return c;
-    case CT_NC: return !c;
-    case CT_Z: return z;
-    case CT_NZ: return !z;
-    }
-
-    return false; //Should never reach
-}
-
-void proc_jp(cpu* cur_cpu)
-{
-    if (check_cond(cur_cpu))
-    {
-        cur_cpu->pc = cur_cpu->data;
-        gb::cycle(1);
-    }
 }
 
 void proc_xor(cpu* cur_cpu)
 {
     cur_cpu->AF.hi ^= (cur_cpu->data & 0xFF);
     set_flags(cur_cpu, cur_cpu->AF.hi == 0, 0, 0, 0);
+}
+
+void proc_and(cpu* cur_cpu)
+{
+    cur_cpu->AF.hi = (cur_cpu->data & 0xFF);
+    set_flags(cur_cpu, cur_cpu->AF.hi == 0, 0, 0, 0);
+}
+
+void proc_or(cpu* cur_cpu)
+{
+    cur_cpu->AF.hi |= (cur_cpu->data & 0xFF);
+    set_flags(cur_cpu, cur_cpu->AF.hi == 0, 0, 0, 0);
+}
+
+
+
+void proc_call(cpu* cpu)
+{
+    goto_addr(cpu, cpu->data, true);
+}
+
+void proc_rst(cpu* cpu)
+{
+    goto_addr(cpu, cpu->cur_inst->param, true);
+}
+
+void proc_ret(cpu* cpu)
+{
+    if (cpu->cur_inst->cond != CT_NONE) gb::cycle(1);
+    if (check_cond(cpu))
+    {
+        uint16_t lo = stack_pop(cpu);
+        gb::cycle(1);
+        uint16_t hi = stack_pop(cpu);
+        gb::cycle(1);
+
+        uint16_t addr = lo | (hi << 8);
+        cpu->pc = addr;
+        gb::cycle(1);
+    }
+}
+
+void proc_reti(cpu* cpu)
+{
+    cpu->int_master_enabled = true;
+    proc_ret(cpu);
+}
+
+void proc_jp(cpu* cur_cpu)
+{
+    goto_addr(cur_cpu, cur_cpu->data, false);
+}
+
+void proc_jr(cpu* cpu)
+{
+    int8_t val = (int8_t)(cpu->data & 0xFF); //Signed 8bit address from Immediate
+    uint16_t addr = cpu->pc + val;
+    goto_addr(cpu, addr, false);
+}
+
+void proc_pop(cpu* cpu) //Pop only operates on 16bit values
+{
+    uint16_t value = stack_pop16(cpu);
+
+    cpu->set_register(cpu->cur_inst->reg_1, value);
+
+    if (cpu->cur_inst->reg_1 == RT_AF)
+    {
+        cpu->set_register(RT_A, (value >> 8) & 0xFF);
+        cpu->set_register(RT_F, value & 0xF0);
+    }
+
+}
+
+void proc_push(cpu* cpu) //Push only operates on 16bit values
+{
+    uint8_t hi = ((cpu->read_register(cpu->cur_inst->reg_1) >> 8) & 0xFF);
+    gb::cycle(1);
+    stack_push(hi, cpu);
+    uint8_t lo = (cpu->read_register(cpu->cur_inst->reg_1) & 0xFF);
+    gb::cycle(1);
+    stack_push(lo, cpu);
+
+    gb::cycle(1);
+}
+
+void proc_inc(cpu* cpu)
+{
+    uint16_t val = cpu->read_register(cpu->cur_inst->reg_1) + 1;
+
+    if (cpu->cur_inst->reg_1 >= RT_AF)
+    {
+        gb::cycle(1);
+    }
+
+    if (cpu->cur_inst->reg_1 == RT_HL && cpu->cur_inst->mode == AM_MR)
+    {
+        val = cpu->mem->mem_read(cpu->read_register(RT_HL)) + 1;
+        val &= 0xFF;
+        gb::cycle(1);
+        cpu->mem->mem_write(cpu->read_register(RT_HL), val);
+    }
+    else
+    {
+        cpu->set_register(cpu->cur_inst->reg_1, val);
+        val = cpu->read_register(cpu->cur_inst->reg_1);
+    }
+
+
+    if ((cpu->read_register(cpu->cur_inst->reg_1) & 0x03) == 0x03)
+    {
+        return;
+    }
+
+    set_flags(cpu, val == 0, 0, (val & 0x0F) == 0, -1);
+}
+
+void proc_dec(cpu* cpu)
+{
+    uint16_t val = cpu->read_register(cpu->cur_inst->reg_1) - 1;
+
+    if (cpu->cur_inst->reg_1 >= RT_AF)
+    {
+        gb::cycle(1);
+    }
+
+    if (cpu->cur_inst->reg_1 == RT_HL && cpu->cur_inst->mode == AM_MR)
+    {
+        val = cpu->mem->mem_read(cpu->read_register(RT_HL)) - 1;
+        val &= 0xFF;
+        gb::cycle(1);
+        cpu->mem->mem_write(cpu->read_register(RT_HL), val);
+    }
+    else
+    {
+        cpu->set_register(cpu->cur_inst->reg_1, val);
+        val = cpu->read_register(cpu->cur_inst->reg_1);
+    }
+
+
+    if ((cpu->read_register(cpu->cur_inst->reg_1) & 0x0B) == 0x0B)
+    {
+        return;
+    }
+
+    set_flags(cpu, val == 0, 1, (val & 0x0F) == 0x0F, -1);
 }
 
 //Table of function ptrs to be returned to cpu
@@ -411,6 +602,17 @@ static inst_map im = {
     {IN_JP, &proc_jp},
     {IN_DI, &proc_di},
     {IN_XOR, &proc_xor},
+    {IN_CALL, &proc_call},
+    {IN_LDH, &proc_ldh},
+    {IN_CB, &proc_cb},
+    {IN_JR, &proc_jr},
+    {IN_POP, &proc_pop},
+    {IN_PUSH, &proc_push},
+    {IN_RET, &proc_ret},
+    {IN_RETI, &proc_reti},
+    {IN_RST, &proc_rst},
+    {IN_INC, &proc_inc},
+    {IN_DEC, &proc_dec},
 };
 
 IN_PROC process::get_proc(in_type type)

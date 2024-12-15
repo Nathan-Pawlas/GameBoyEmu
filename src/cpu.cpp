@@ -223,10 +223,10 @@ bool cpu::step()
 		uint16_t temp_pc = pc;
 		fetch_instruction();
 		fetch_data();
-		printf("%04x: %7s (%02x %02x %02x) AF:%04x  BC:%04x  DE:%04x\n",
+		printf("%04X: %7s (%02X %02X %02X) A:%02X  BC:%04X  DE:%04X HL:%04X\n",
 			temp_pc, inst_name[cur_inst->type], opcode,
 			mem->mem_read(temp_pc + 1), mem->mem_read(temp_pc + 2),
-			read_register(RT_AF), read_register(RT_BC), read_register(RT_DE));
+			read_register(RT_A), read_register(RT_BC), read_register(RT_DE), read_register(RT_HL));
 		execute();
 		return true;
 	}

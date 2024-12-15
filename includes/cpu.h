@@ -31,6 +31,7 @@ public:
 	uint16_t read_register(reg_type rt);
     void set_register(reg_type rt, uint16_t data);
 
+
 public:
 	bool halted = false;
 	bool stepping = true;
@@ -41,7 +42,7 @@ public:
 	reg DE;
 	reg HL;
 	uint16_t pc = 0x100;
-	uint16_t sptr = 0x0;
+	uint16_t sptr = 0xDFFF;
 
 	bool dest_in_mem;
     bool int_master_enabled;

@@ -18,7 +18,7 @@ int gb::emu_run(int argc, char* argv[])
 	cpu.init(&mem);
 
 	//Try Loading ROM into memory
-	if (!mem.load_rom("../../../roms/dmg-acid2.gb"))
+	if (!mem.load_rom("../../../roms/mem_timing.gb"))
 	{
 		printf("Failed to load ROM: %s\n", argv[1]);
 		return -1;

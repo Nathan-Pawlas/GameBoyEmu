@@ -15,8 +15,9 @@
     "",
     "\\includes",
     "\\out",
+    "\\roms",
     "\\src"
   ],
-  "SelectedNode": "\\CMakeLists.txt",
+  "SelectedNode": "\\src\\instructions.cpp",
   "PreviewInSolutionExplorer": false
 }

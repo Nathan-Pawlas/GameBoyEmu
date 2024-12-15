@@ -124,4 +124,5 @@ class process //Effictively a "function pointer" class for the cpu
 {
 public:
 	static IN_PROC get_proc(in_type type);
+
 };

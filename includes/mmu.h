@@ -71,6 +71,11 @@ public:
 	uint8_t *rom_data;
 	header* rom_header;
 
+	uint8_t wram[0x2000];
+	uint8_t hram[0x80];
+
+	uint8_t ie_register;
+
 private:
 	//Lookup tables for debug printing
 	const char* get_rom_type(int type) {
