@@ -483,7 +483,7 @@ void proc_ret(cpu* cpu)
         uint16_t hi = stack_pop(cpu);
         gb::cycle(1);
 
-        uint16_t addr = lo | (hi << 8);
+        uint16_t addr = (hi << 8) | lo;
         cpu->pc = addr;
         gb::cycle(1);
     }
@@ -510,13 +510,13 @@ void proc_jr(cpu* cpu)
 void proc_pop(cpu* cpu) //Pop only operates on 16bit values
 {
     uint16_t value = stack_pop16(cpu);
+    gb::cycle(2);
 
     cpu->set_register(cpu->cur_inst->reg_1, value);
 
     if (cpu->cur_inst->reg_1 == RT_AF)
     {
-        cpu->set_register(RT_A, (value >> 8) & 0xFF);
-        cpu->set_register(RT_F, value & 0xF0);
+        cpu->set_register(RT_AF, value & 0xFFF0);
     }
 
 }
@@ -537,7 +537,7 @@ void proc_inc(cpu* cpu)
 {
     uint16_t val = cpu->read_register(cpu->cur_inst->reg_1) + 1;
 
-    if (cpu->cur_inst->reg_1 >= RT_AF)
+    if (cpu->cur_inst->reg_1 >= RT_AF) //Check if the register is 16bits
     {
         gb::cycle(1);
     }
@@ -545,7 +545,7 @@ void proc_inc(cpu* cpu)
     if (cpu->cur_inst->reg_1 == RT_HL && cpu->cur_inst->mode == AM_MR)
     {
         val = cpu->mem->mem_read(cpu->read_register(RT_HL)) + 1;
-        val &= 0xFF;
+        val &= 0xFF; //Mask out just the bottom byte incase of overflow (inc [HL] only increments 1 byte!)
         gb::cycle(1);
         cpu->mem->mem_write(cpu->read_register(RT_HL), val);
     }
@@ -568,7 +568,7 @@ void proc_dec(cpu* cpu)
 {
     uint16_t val = cpu->read_register(cpu->cur_inst->reg_1) - 1;
 
-    if (cpu->cur_inst->reg_1 >= RT_AF)
+    if (cpu->cur_inst->reg_1 >= RT_AF) //Check if the register is 16bits
     {
         gb::cycle(1);
     }
@@ -595,6 +595,54 @@ void proc_dec(cpu* cpu)
     set_flags(cpu, val == 0, 1, (val & 0x0F) == 0x0F, -1);
 }
 
+void proc_add(cpu* cpu)
+{
+    uint16_t value = cpu->read_register(cpu->cur_inst->reg_1) + cpu->data;
+
+    uint8_t z = 0; 
+    uint8_t h = 0;
+    uint8_t c = 0;
+
+    if (cpu->cur_inst->reg_1 >= RT_AF)
+    {
+        gb::cycle(1);
+
+        z = -1; //I.E. don't touch
+        h = ((cpu->read_register(cpu->cur_inst->reg_1) & 0xFFF) + (cpu->data & 0xFFF)) > 0x00FF;
+        c = ((uint32_t)cpu->read_register(cpu->cur_inst->reg_1) + (uint32_t)cpu->data) > 0xFFFF;
+    }
+    else
+    {
+        z = (value & 0xFF) == 0;
+        h = ((cpu->read_register(cpu->cur_inst->reg_1) & 0xF) + (cpu->data & 0xF)) > 0x0F;
+        c = ((uint32_t)cpu->read_register(cpu->cur_inst->reg_1) + (uint32_t)cpu->data) > 0xFF;
+    }
+
+    if (cpu->cur_inst->reg_1 == RT_SP)
+    {
+        value = cpu->read_register(cpu->cur_inst->reg_1) + (uint8_t)cpu->data;
+
+        z = 0;
+        h = ((cpu->read_register(cpu->cur_inst->reg_1) & 0xF) + (cpu->data & 0xF)) > 0x0F;
+        c = ((uint32_t)cpu->read_register(cpu->cur_inst->reg_1) + (uint32_t)cpu->data) > 0xFF;
+    }
+
+    set_flags(cpu, z, 0, h, c);
+    cpu->set_register(cpu->cur_inst->reg_1, value);
+}
+
+void proc_sub(cpu* cpu) //Only 1 byte sub instructions!
+{
+    uint16_t value = cpu->read_register(cpu->cur_inst->reg_1) - cpu->data;
+
+    int z = value == 0;
+    int h = ((int)(cpu->read_register(cpu->cur_inst->reg_1) &0xF) - (int)(cpu->data * 0xF)) < 0;
+    int c = ((int)cpu->read_register(cpu->cur_inst->reg_1) - (int)cpu->data) < 0;
+
+    set_flags(cpu, z, 1, h, c);
+    cpu->set_register(cpu->cur_inst->reg_1, value);
+}
+
 //Table of function ptrs to be returned to cpu
 static inst_map im = {
     {IN_NOP, &proc_nop},
@@ -613,6 +661,8 @@ static inst_map im = {
     {IN_RST, &proc_rst},
     {IN_INC, &proc_inc},
     {IN_DEC, &proc_dec},
+    {IN_ADD, &proc_add},
+    {IN_SUB, &proc_sub},
 };
 
 IN_PROC process::get_proc(in_type type)
