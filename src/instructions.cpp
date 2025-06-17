@@ -391,9 +391,61 @@ void proc_nop(cpu* cur_cpu)
     //No Operation
 }
 
+reg_type rt_lookup[] = {
+    RT_B,
+    RT_C,
+    RT_D,
+    RT_E,
+    RT_H,
+    RT_L,
+    RT_HL,
+    RT_A,
+};
+
+reg_type decode_reg(uint8_t reg)
+{
+    if (reg > 0b111)
+    {
+        return RT_NONE;
+    }
+
+    return rt_lookup[reg];
+}
+
 void proc_cb(cpu* cpu)
 {
-    //TODO!!!!
+    uint8_t op = cpu->data;
+    reg_type reg = decode_reg(op & 0b111);
+    uint8_t bit = (op >> 3) & 0b111;
+    uint8_t bit_op = (op >> 6) & 0b11;
+    uint16_t reg_val = cpu->read_register(reg);
+
+    gb::cycle(1);
+
+    if (reg == RT_HL)
+    {
+        gb::cycle(2);
+    }
+
+    switch (bit_op)
+    {
+    case 1:
+        //BIT
+        set_flags(cpu, !(reg_val & (1 << bit)), 0, 1, -1);
+        break;
+    case 2:
+        //RST
+        reg_val &= ~(1 << bit);
+        cpu->set_register(reg, reg_val);
+        break;
+    case 3:
+        //SET
+        reg_val |= (1 << bit);
+        cpu->set_register(reg, reg_val);
+        re;
+    case 4:
+
+    }
 }
 
 void proc_ld(cpu* cur_cpu)
@@ -631,6 +683,17 @@ void proc_add(cpu* cpu)
     cpu->set_register(cpu->cur_inst->reg_1, value);
 }
 
+void proc_adc(cpu* cpu)
+{
+    uint16_t data = cpu->data;
+    uint16_t a = cpu->read_register(RT_A);
+    uint16_t c = BIT(cpu->read_register(RT_F), 4);
+
+    cpu->set_register(RT_A, (a + data + c));
+
+    set_flags(cpu, cpu->read_register(RT_A) == 0, 0, (a & 0xF) + (data & 0xF) + c > 0xF, a + data + c > 0xFF);
+}
+
 void proc_sub(cpu* cpu) //Only 1 byte sub instructions!
 {
     uint16_t value = cpu->read_register(cpu->cur_inst->reg_1) - cpu->data;
@@ -641,6 +704,28 @@ void proc_sub(cpu* cpu) //Only 1 byte sub instructions!
 
     set_flags(cpu, z, 1, h, c);
     cpu->set_register(cpu->cur_inst->reg_1, value);
+}
+
+void proc_sbc(cpu* cpu)
+{
+    uint16_t data = cpu->data;
+    uint16_t a = cpu->read_register(cpu->cur_inst->reg_1);
+    uint16_t c = BIT(cpu->read_register(RT_F), 4);
+
+    int z = a - (data + c) == 0;
+    int h = (a & 0xF) - (data & 0xF) - c < 0;
+    int c_flag = a - data - c < 0;
+
+    cpu->set_register(cpu->cur_inst->reg_1, (a - (data + c)));
+    set_flags(cpu, z, 1, h, c_flag);
+
+}
+
+void proc_cp(cpu* cpu)
+{
+    int n = cpu->read_register(RT_A) - cpu->data;
+
+    set_flags(cpu, n == 0, 1, (cpu->read_register(RT_A) & 0xF) - (cpu->data & 0xF) < 0, n < 0);
 }
 
 //Table of function ptrs to be returned to cpu
@@ -663,6 +748,12 @@ static inst_map im = {
     {IN_DEC, &proc_dec},
     {IN_ADD, &proc_add},
     {IN_SUB, &proc_sub},
+    {IN_ADC, &proc_adc},
+    {IN_SBC, &proc_sbc},
+    {IN_AND, &proc_and},
+    {IN_OR, &proc_or},
+    {IN_CP, &proc_cp},
+    {IN_CB, &proc_cb},
 };
 
 IN_PROC process::get_proc(in_type type)

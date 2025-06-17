@@ -35,7 +35,6 @@ public:
 public:
 	bool halted = false;
 	bool stepping = true;
-	int test = 123;
 
 	reg AF;
 	reg BC;
@@ -47,9 +46,13 @@ public:
 	bool dest_in_mem;
     bool int_master_enabled;
 
+    //Data fetched for specified instruction
 	uint16_t data = 0;
+    //Memory Destination to Read/Write 
 	uint16_t mem_dest = 0;
+    //Opcode of current instruction
 	uint8_t opcode = 0x00;
+    //Current Instruction
 	instruction *cur_inst = nullptr;
 
 	mmu *mem;
